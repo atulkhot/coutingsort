@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"strconv"
 	"time"
 )
 
@@ -11,12 +12,15 @@ type Customer struct {
 	num_purchases int
 }
 
-func Make_random_array(num_items, max int) []int {
-	var rand_array []int
+func make_random_slice(num_items, max int) []Customer {
+	var rand_array []Customer
 
 	rand.Seed(time.Now().UnixNano())
 	for i := 0; i < num_items; i++ {
-		rand_array = append(rand_array, rand.Intn(max))
+		customer := Customer{}
+		customer.id = "C" + strconv.Itoa(i)
+		customer.num_purchases = rand.Intn(max)
+		rand_array = append(rand_array, customer)
 	}
 
 	return rand_array
@@ -29,46 +33,76 @@ func Min(x, y int) int {
 	return x
 }
 
-func MaxElem(v []int) int {
-	m := v[0]
+func max_elem(v []Customer) int {
+	m := 0
 	for i, e := range v {
-		if i == 0 || e > m {
-			m = e
+		if i == 0 || e.num_purchases > m {
+			m = e.num_purchases
 		}
 	}
 	return m
 }
 
-func Print_array(arr []int, num_items int) {
+func print_slice(arr []Customer, num_items int) {
 	num_elems := Min(len(arr), num_items)
 	fmt.Println(arr[:num_elems])
 }
 
-func main() {
-	a := Make_random_array(10, 25)
-	fmt.Println(a)
+func check_sorted(arr []Customer) bool {
+	prev := Customer{}
+	for i, cust := range arr {
+		if i == 0 {
+			prev = cust
+		} else {
+			if prev.num_purchases > cust.num_purchases {
+				return false
+			}
+		}
+	}
+	return true
+}
 
-	maxElem := MaxElem(a)
-	counts := make([]int, maxElem+1)
+func counting_sort(a []Customer, items int) []Customer {
+	counts := make([]int, max_elem(a)+1)
 
 	for i := 0; i < len(a); i++ {
-		elem := a[i]
+		elem := a[i].num_purchases
 		counts[elem]++
 	}
-	//fmt.Println(counts)
 
 	for i := 1; i < len(counts); i++ {
 		counts[i] += counts[i-1]
 	}
-	fmt.Print("Count = ")
-	fmt.Println(counts)
 
-	sorted_a := make([]int, len(a))
+	sorted_a := make([]Customer, len(a))
 
 	for k := len(a) - 1; k >= 0; k-- {
-		sorted_a[counts[a[k]]-1] = a[k]
-		counts[a[k]]--
+		sorted_a[counts[a[k].num_purchases]-1] = a[k]
+		counts[a[k].num_purchases]--
 	}
 
-	fmt.Println(sorted_a)
+	return sorted_a
+}
+
+func main() {
+	rand.Seed(time.Now().UnixNano())
+
+	// Get the number of items and maximum item value.
+	var num_items, max int
+	fmt.Printf("# Items: ")
+	fmt.Scanln(&num_items)
+	fmt.Printf("Max: ")
+	fmt.Scanln(&max)
+
+	// Make and display the unsorted slice.
+	values := make_random_slice(num_items, max)
+	print_slice(values, 40)
+	fmt.Println()
+
+	//// Sort and display the result.
+	sorted := counting_sort(values, max)
+	print_slice(sorted, 40)
+	//
+	//// Verify that it's sorted.
+	//check_sorted(sorted)
 }
